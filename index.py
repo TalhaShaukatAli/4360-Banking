@@ -1,3 +1,21 @@
+import os
+
+def load_balances():
+    if os.path.exists("balances.txt"):
+        with open("balances.txt", "r") as f:
+            balances = f.readlines()
+            balance_1 = float(balances[0].strip())
+            balance_2 = float(balances[1].strip())
+        return balance_1, balance_2
+    else:
+        return 0.0, 0.0  #default balance of 0 for both accounts
+
+# Function to save balances to a file
+def save_balances(balance_1, balance_2):
+    with open("balances.txt", "w") as f:
+        f.write(f"{balance_1}\n")
+        f.write(f"{balance_2}\n")
+
 def show_balance(balance):
     print("*********************")
     print(f"Your balance is ${balance:.2f}")
@@ -82,7 +100,8 @@ def sign_in():
         print("Invalid username or password.")
         return False
     
-def lock_account():
+def lock_account(b1, b2):
+    save_balances(b1, b2)
     print("*********************")
     print("Account locked")
     print("*********************")
@@ -115,8 +134,7 @@ def main():
 
     account = account_options()
 
-    balance_1 = 0
-    balance_2 = 0
+    balance_1, balance_2 = load_balances()
     is_running = True
 
     while is_running:
@@ -152,8 +170,9 @@ def main():
             else:
                 balance_2 -= transfer(balance_2)
         elif choice == '5':
-            lock_account()
+            lock_account(balance_1, balance_2)
         elif choice == '6':
+            save_balances(balance_1, balance_2)
             is_running = False
         else:
             print("*********************")
