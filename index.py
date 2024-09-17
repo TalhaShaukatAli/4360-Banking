@@ -84,10 +84,11 @@ def transfer(balance):
     decorated_message("Enter the amount to be transferred: ")
     amount = float(input())
     clear_screen()
+
     if amount > balance:
         decorated_message("Insufficient funds")
         return 0
-    elif amount < 1:
+    elif amount <= 0:
         decorated_message("Amount must be greater than 0")
         return 0
     elif amount > 10000:
