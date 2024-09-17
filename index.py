@@ -189,9 +189,13 @@ def main():
                 balance_2 -= withdraw(balance_2)
         elif choice == '4':
             if account == 1:
-                balance_1 -= transfer(balance_1)
+                t = transfer(balance_1)
+                balance_1 -= t
+                balance_2 += t
             else:
-                balance_2 -= transfer(balance_2)
+                t = transfer(balance_2)
+                balance_2 -= t
+                balance_1 += t
         elif choice == '5':
             lock_account(balance_1, balance_2)
         elif choice == '6':
