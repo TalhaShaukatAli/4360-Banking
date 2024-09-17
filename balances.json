@@ -1,0 +1,14 @@
+{
+    "users": {
+        "justin": {
+            "accounts": {
+                "account1": {
+                    "balance": 1999650.0
+                },
+                "account2": {
+                    "balance": 19846.69
+                }
+            }
+        }
+    }
+}

@@ -1,4 +1,4 @@
-import os
+import os, json
 
 def clear_screen():
     if os.name == 'nt':
@@ -16,20 +16,33 @@ def decorated_message(message):
         print(f"* {line.ljust(max_length)} *")
     print(border + "\n")
     
-def load_balances():
-    if os.path.exists("balances.txt"):
-        with open("balances.txt", "r") as f:
-            balances = f.readlines()
-            balance_1 = float(balances[0].strip())
-            balance_2 = float(balances[1].strip())
+def load_balances(user="justin"):
+    if os.path.exists("balances.json"):
+        with open("balances.json", "r") as f:
+            data = json.load(f)
+            user_data = data.get("users", {}).get(user, {}).get("accounts", {})
+            balance_1 = user_data.get("account1", {}).get("balance", 0.0)
+            balance_2 = user_data.get("account2", {}).get("balance", 0.0)
         return balance_1, balance_2
     else:
         return 0.0, 0.0  #default balance of 0 for both accounts
 
-def save_balances(balance_1, balance_2):
-    with open("balances.txt", "w") as f:
-        f.write(f"{balance_1}\n")
-        f.write(f"{balance_2}\n")
+def save_balances(balance_1, balance_2, user="justin"):
+    if os.path.exists("balances.json"):
+        with open("balances.json", "r") as f:
+            data = json.load(f)
+    else:
+        data = {"users": {}}
+    
+    data["users"][user] = {
+        "accounts": {
+            "account1": {"balance": balance_1},
+            "account2": {"balance": balance_2}
+        }
+    }
+
+    with open("balances.json", "w") as f:
+        json.dump(data, f, indent=4)
 
 def show_balance(balance):
     decorated_message(f"Your balance is ${balance:.2f}")
@@ -62,7 +75,7 @@ def withdraw(balance):
 def transfer(balance):
     decorated_message("Enter the amount to be transferred: ")
     amount = float(input())
-
+    clear_screen()
     if amount > balance:
         decorated_message("Insufficient funds")
         return 0
@@ -73,7 +86,7 @@ def transfer(balance):
         decorated_message("Transfer limit exceeded. Please try again.")
         return 0
     else:
-        decorated_message("Amount successfully transferred")
+        decorated_message(f"{amount} successfully transferred")
         return amount
     
 def sign_in():
