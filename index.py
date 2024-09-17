@@ -7,9 +7,14 @@ def clear_screen():
         os.system('clear')
 
 def decorated_message(message):
-    print("*********************")
-    print(message)
-    print("*********************\n")
+    lines = message.split("\n")
+    max_length = max(len(line) for line in lines)
+    border = '*' * (max_length + 4)
+
+    print(border)
+    for line in lines:
+        print(f"* {line.ljust(max_length)} *")
+    print(border + "\n")
     
 def load_balances():
     if os.path.exists("balances.txt"):
@@ -72,18 +77,14 @@ def transfer(balance):
         return amount
     
 def sign_in():
-    print("*****************************")
-    print(" Welcome to the Banking App! ")
-    print("     Please Sign In ")
-    print("*****************************")
+    decorated_message(" Welcome to the Banking App!\n" + "     Please Sign In ")
     username = input("Enter your username: ")
     password = input("Enter your password: ")
-    print("*********************")
 
     clear_screen()
 
     if username == "justin" and password == "software":
-        print("Sign-in successful!")
+        print("Sign-in successful!\n")
         return True
     else:
         print("Invalid username or password.")
@@ -124,8 +125,7 @@ def main():
     while is_running:
         balance = balance_1 if account == 1 else balance_2
 
-        print("*********************")
-        print(f" Banking App - Account {account} ")
+        print(f"Banking App - Account {account} \n")
         decorated_message("1. Show Balance\n"+"2. Deposit\n"+"3. Withdraw\n"+"4. Transfer\n"+"5. Lock Account\n"+"6. Exit")
         choice = input("Enter your choice (1-6): ")
 
