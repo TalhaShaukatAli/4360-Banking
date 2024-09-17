@@ -1,5 +1,16 @@
 import os
 
+def clear_screen():
+    if os.name == 'nt':
+        os.system('cls')
+    else:
+        os.system('clear')
+
+def decorated_message(message):
+    print("*********************")
+    print(message)
+    print("*********************\n")
+    
 def load_balances():
     if os.path.exists("balances.txt"):
         with open("balances.txt", "r") as f:
@@ -10,77 +21,54 @@ def load_balances():
     else:
         return 0.0, 0.0  #default balance of 0 for both accounts
 
-# Function to save balances to a file
 def save_balances(balance_1, balance_2):
     with open("balances.txt", "w") as f:
         f.write(f"{balance_1}\n")
         f.write(f"{balance_2}\n")
 
 def show_balance(balance):
-    print("*********************")
-    print(f"Your balance is ${balance:.2f}")
-    print("*********************")
+    decorated_message(f"Your balance is ${balance:.2f}")
 
 def deposit():
-    print("*********************")
-    amount = float(input("Enter an amount to be deposited: "))
-    print("*********************")
+    decorated_message("Enter an amount to be deposited: ")
+    amount = float(input())
+    clear_screen()
     if amount < 0:
-        print("*********************")
-        print("That's not a valid amount")
-        print("*********************")
+        decorated_message("That's not a valid amount")
         return 0
     else:
-        print("*********************")
-        print("Amount successfully deposited")
-        print("*********************")
+        decorated_message(f"${amount} successfully deposited")
         return amount
 
 def withdraw(balance):
-    print("*********************")
-    amount = float(input("Enter amount to be withdrawn: "))
-    print("*********************")
-
+    decorated_message("Enter amount to be withdrawn: ")
+    amount = float(input())
+    clear_screen()
     if amount > balance:
-        print("*********************")
-        print("Insufficient funds")
-        print("*********************")
+        decorated_message("Insufficient funds")
         return 0
     elif amount < 0:
-        print("*********************")
-        print("Amount must be greater than 0")
-        print("*********************")
+        decorated_message("Amount must be greater than 0")
         return 0
     else:
-        print("*********************")
-        print("Amount successfully withdrawn")
-        print("*********************")
+        decorated_message(f"${amount} successfully withdrawn")
         return amount
     
 def transfer(balance):
-    print("*********************")
-    amount = float(input("Enter the amount to be transferred: "))
-    print("*********************")
+    decorated_message("Enter the amount to be transferred: ")
+    amount = float(input())
 
     if amount > balance:
-        print("*********************")
-        print("Insufficient funds")
-        print("*********************")
+        decorated_message("Insufficient funds")
         return 0
     elif amount < 1:
-        print("*********************")
-        print("Amount must be greater than 0")
-        print("*********************")
+        decorated_message("Amount must be greater than 0")
         return 0
     elif amount > 10000:
-        print("*********************")
-        print("Transfer limit exceeded. Please try again.")
-        print("*********************")
+        decorated_message("Transfer limit exceeded. Please try again.")
         return 0
     else:
-        print("*********************")
-        print("Amount successfully transferred")
-        print("*********************")
+        decorated_message("Amount successfully transferred")
         return amount
     
 def sign_in():
@@ -92,6 +80,7 @@ def sign_in():
     password = input("Enter your password: ")
     print("*********************")
 
+    clear_screen()
 
     if username == "justin" and password == "software":
         print("Sign-in successful!")
@@ -102,18 +91,11 @@ def sign_in():
     
 def lock_account(b1, b2):
     save_balances(b1, b2)
-    print("*********************")
-    print("Account locked")
-    print("*********************")
+    decorated_message("Account locked")
     exit()
 
 def account_options():
-    print("*********************")
-    print("Which account would you like to use?")
-    print("1. Account 1")
-    print("2. Account 2")
-    print("3. Exit")
-    print("*********************")
+    decorated_message("Which account would you like to use?\n"+"1. Account 1\n"+"2. Account 2\n"+"3. Exit")
     choice = input("Enter your choice (1-3): ")
 
     if choice == '1':
@@ -137,20 +119,17 @@ def main():
     balance_1, balance_2 = load_balances()
     is_running = True
 
+    clear_screen()
+
     while is_running:
         balance = balance_1 if account == 1 else balance_2
 
         print("*********************")
         print(f" Banking App - Account {account} ")
-        print("*********************")
-        print("1. Show Balance")
-        print("2. Deposit")
-        print("3. Withdraw")
-        print("4. Transfer")
-        print("5. Lock Account")
-        print("6. Exit")
-        print("*********************")
+        decorated_message("1. Show Balance\n"+"2. Deposit\n"+"3. Withdraw\n"+"4. Transfer\n"+"5. Lock Account\n"+"6. Exit")
         choice = input("Enter your choice (1-6): ")
+
+        clear_screen()
 
         if choice == '1':
             show_balance(balance)
@@ -175,13 +154,9 @@ def main():
             save_balances(balance_1, balance_2)
             is_running = False
         else:
-            print("*********************")
-            print("That is not a valid choice")
-            print("*********************")
+            decorated_message("That is not a valid choice")
 
-    print("*********************")
-    print("Thank you! Have a nice day!")
-    print("*********************")
+    decorated_message("Thank you! Have a nice day!")
 
 if __name__ == '__main__':
     main()
