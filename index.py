@@ -37,6 +37,11 @@ def save_user_data(user_data, user="justin"):
     with open("balances.json", "w") as f:
         json.dump(data, f, indent=4)
 
+def reset_tx_attempts(user = "justin"):
+    user_data = load_user_data(user)
+    user_data["session_transfers"] = 0
+    save_user_data(user_data)
+
 def load_balances(user="justin"):
     user_data = load_user_data(user)
     accounts = user_data.get("accounts", {})
@@ -81,22 +86,30 @@ def withdraw(balance):
         return amount
     
 def transfer(balance):
+    final_amount = 0
+    user_data = load_user_data()
+    if user_data.get("session_transfers", 0) >= 3:
+        decorated_message("Transfer limit of 3 per session reached")
+        return final_amount
+
     decorated_message("Enter the amount to be transferred: ")
     amount = float(input())
     clear_screen()
 
-    if amount > balance:
-        decorated_message("Insufficient funds")
-        return 0
-    elif amount <= 0:
+    if amount <= 0:
         decorated_message("Amount must be greater than 0")
-        return 0
+    elif amount > balance:
+        decorated_message("Insufficient funds")
     elif amount > 10000:
         decorated_message("Transfer limit exceeded. Please try again.")
-        return 0
     else:
         decorated_message(f"{amount} successfully transferred")
-        return amount
+        final_amount = amount
+
+    user_data["session_transfers"] = user_data.get("session_transfers", 0) + 1
+    save_user_data(user_data)
+
+    return final_amount
     
 failed_login_wait = 60
 
@@ -124,6 +137,7 @@ def sign_in():
         user_data["login_attempts"] = 0
         save_user_data(user_data, username)
         print("Sign-in successful!\n")
+        reset_tx_attempts()
         return True
     else:
         # Increment login attempts and record unsuccessful login
@@ -177,16 +191,19 @@ def main():
 
         if choice == '1':
             show_balance(balance)
+
         elif choice == '2':
             if account == 1:
                 balance_1 += deposit()
             else:
                 balance_2 += deposit()
+
         elif choice == '3':
             if account == 1:
                 balance_1 -= withdraw(balance_1)
             else:
                 balance_2 -= withdraw(balance_2)
+
         elif choice == '4':
             if account == 1:
                 t = transfer(balance_1)
@@ -196,11 +213,14 @@ def main():
                 t = transfer(balance_2)
                 balance_2 -= t
                 balance_1 += t
+
         elif choice == '5':
             lock_account(balance_1, balance_2)
+
         elif choice == '6':
             save_balances(balance_1, balance_2)
             is_running = False
+
         else:
             decorated_message("That is not a valid choice")
 
