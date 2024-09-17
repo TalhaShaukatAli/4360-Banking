@@ -121,7 +121,6 @@ def sign_in():
     if username == "justin" and password == "software":
         # Successful login
         user_data["login_attempts"] = 0
-        user_data["last_successful_login"] = datetime.now().isoformat()
         save_user_data(user_data, username)
         print("Sign-in successful!\n")
         return True
