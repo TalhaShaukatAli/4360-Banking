@@ -1,0 +1,17 @@
+{
+    "users": {
+        "justin": {
+            "accounts": {
+                "account1": {
+                    "balance": 1999627.69
+                },
+                "account2": {
+                    "balance": 19868.31
+                }
+            },
+            "login_attempts": 0,
+            "last_unsuccessful_login": "2024-09-16T21:05:33.333409",
+            "session_transfers": 3
+        }
+    }
+}

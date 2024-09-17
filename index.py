@@ -1,100 +1,159 @@
+import os, json
+from datetime import datetime
+
+def clear_screen():
+    if os.name == 'nt':
+        os.system('cls')
+    else:
+        os.system('clear')
+
+def decorated_message(message):
+    lines = message.split("\n")
+    max_length = max(len(line) for line in lines)
+    border = '*' * (max_length + 4)
+
+    print(border)
+    for line in lines:
+        print(f"* {line.ljust(max_length)} *")
+    print(border + "\n")
+
+def load_user_data(user="justin"):
+    if os.path.exists("balances.json"):
+        with open("balances.json", "r") as f:
+            data = json.load(f)
+            user_data = data.get("users", {}).get(user, {})
+            return user_data
+    return {"accounts": {}, "login_attempts": 0, "last_successful_login": None}
+
+def save_user_data(user_data, user="justin"):
+    if os.path.exists("balances.json"):
+        with open("balances.json", "r") as f:
+            data = json.load(f)
+    else:
+        data = {"users": {}}
+    
+    data["users"][user] = user_data
+
+    with open("balances.json", "w") as f:
+        json.dump(data, f, indent=4)
+
+def reset_tx_attempts(user = "justin"):
+    user_data = load_user_data(user)
+    user_data["session_transfers"] = 0
+    save_user_data(user_data)
+
+def load_balances(user="justin"):
+    user_data = load_user_data(user)
+    accounts = user_data.get("accounts", {})
+    balance_1 = accounts.get("account1", {}).get("balance", 0.0)
+    balance_2 = accounts.get("account2", {}).get("balance", 0.0)
+    return balance_1, balance_2
+
+def save_balances(balance_1, balance_2, user="justin"):
+    user_data = load_user_data(user)
+    user_data["accounts"] = {
+        "account1": {"balance": balance_1},
+        "account2": {"balance": balance_2}
+    }
+    save_user_data(user_data, user)
+
 def show_balance(balance):
-    print("*********************")
-    print(f"Your balance is ${balance:.2f}")
-    print("*********************")
+    decorated_message(f"Your balance is ${balance:.2f}")
 
 def deposit():
-    print("*********************")
-    amount = float(input("Enter an amount to be deposited: "))
-    print("*********************")
+    decorated_message("Enter an amount to be deposited: ")
+    amount = float(input())
+    clear_screen()
     if amount < 0:
-        print("*********************")
-        print("That's not a valid amount")
-        print("*********************")
+        decorated_message("That's not a valid amount")
         return 0
     else:
-        print("*********************")
-        print("Amount successfully deposited")
-        print("*********************")
+        decorated_message(f"${amount} successfully deposited")
         return amount
 
 def withdraw(balance):
-    print("*********************")
-    amount = float(input("Enter amount to be withdrawn: "))
-    print("*********************")
-
+    decorated_message("Enter amount to be withdrawn: ")
+    amount = float(input())
+    clear_screen()
     if amount > balance:
-        print("*********************")
-        print("Insufficient funds")
-        print("*********************")
+        decorated_message("Insufficient funds")
         return 0
     elif amount < 0:
-        print("*********************")
-        print("Amount must be greater than 0")
-        print("*********************")
+        decorated_message("Amount must be greater than 0")
         return 0
     else:
-        print("*********************")
-        print("Amount successfully withdrawn")
-        print("*********************")
+        decorated_message(f"${amount} successfully withdrawn")
         return amount
     
 def transfer(balance):
-    print("*********************")
-    amount = float(input("Enter the amount to be transferred: "))
-    print("*********************")
+    final_amount = 0
+    user_data = load_user_data()
+    if user_data.get("session_transfers", 0) >= 3:
+        decorated_message("Transfer limit of 3 per session reached")
+        return final_amount
 
-    if amount > balance:
-        print("*********************")
-        print("Insufficient funds")
-        print("*********************")
-        return 0
-    elif amount < 1:
-        print("*********************")
-        print("Amount must be greater than 0")
-        print("*********************")
-        return 0
+    decorated_message("Enter the amount to be transferred: ")
+    amount = float(input())
+    clear_screen()
+
+    if amount <= 0:
+        decorated_message("Amount must be greater than 0")
+    elif amount > balance:
+        decorated_message("Insufficient funds")
     elif amount > 10000:
-        print("*********************")
-        print("Transfer limit exceeded. Please try again.")
-        print("*********************")
-        return 0
+        decorated_message("Transfer limit exceeded. Please try again.")
     else:
-        print("*********************")
-        print("Amount successfully transferred")
-        print("*********************")
-        return amount
+        decorated_message(f"{amount} successfully transferred")
+        final_amount = amount
+
+    user_data["session_transfers"] = user_data.get("session_transfers", 0) + 1
+    save_user_data(user_data)
+
+    return final_amount
     
+failed_login_wait = 60
+
 def sign_in():
-    print("*****************************")
-    print(" Welcome to the Banking App! ")
-    print("     Please Sign In ")
-    print("*****************************")
+    decorated_message(" Welcome to the Banking App!\n" + "     Please Sign In ")
     username = input("Enter your username: ")
     password = input("Enter your password: ")
-    print("*********************")
 
+    clear_screen()
+
+    user_data = load_user_data(username)
+
+    seconds_since_last_attempt = round((datetime.now() - datetime.fromisoformat(user_data.get("last_unsuccessful_login"))).total_seconds(), 0)
+
+    # Check if more than 3 failed attempts have been made
+    if user_data.get("login_attempts") >= 3:
+        # If so, check if enough time has passed since last failed attempt
+        if seconds_since_last_attempt < failed_login_wait:
+            wait_time = failed_login_wait - seconds_since_last_attempt
+            print(f"Last login attempt too recent\nPlease wait {wait_time} more seconds before attempting to login again")
+            return False
 
     if username == "justin" and password == "software":
-        print("Sign-in successful!")
+        # Successful login
+        user_data["login_attempts"] = 0
+        save_user_data(user_data, username)
+        print("Sign-in successful!\n")
+        reset_tx_attempts()
         return True
     else:
+        # Increment login attempts and record unsuccessful login
+        user_data["login_attempts"] = user_data.get("login_attempts", 0) + 1
+        user_data["last_unsuccessful_login"] = datetime.now().isoformat()
+        save_user_data(user_data, username)
         print("Invalid username or password.")
         return False
-    
-def lock_account():
-    print("*********************")
-    print("Account locked")
-    print("*********************")
+
+def lock_account(b1, b2):
+    save_balances(b1, b2)
+    decorated_message("Account locked")
     exit()
 
 def account_options():
-    print("*********************")
-    print("Which account would you like to use?")
-    print("1. Account 1")
-    print("2. Account 2")
-    print("3. Exit")
-    print("*********************")
+    decorated_message("Which account would you like to use?\n"+"1. Account 1\n"+"2. Account 2\n"+"3. Exit")
     choice = input("Enter your choice (1-3): ")
 
     if choice == '1':
@@ -102,6 +161,7 @@ def account_options():
     elif choice == '2':
         return 2
     elif choice == '3':
+        clear_screen()
         print("Have a nice day!")
         exit()
     else:
@@ -115,54 +175,56 @@ def main():
 
     account = account_options()
 
-    balance_1 = 0
-    balance_2 = 0
+    balance_1, balance_2 = load_balances()
     is_running = True
+
+    clear_screen()
 
     while is_running:
         balance = balance_1 if account == 1 else balance_2
 
-        print("*********************")
-        print(f" Banking App - Account {account} ")
-        print("*********************")
-        print("1. Show Balance")
-        print("2. Deposit")
-        print("3. Withdraw")
-        print("4. Transfer")
-        print("5. Lock Account")
-        print("6. Exit")
-        print("*********************")
+        print(f"Banking App - Account {account} \n")
+        decorated_message("1. Show Balance\n"+"2. Deposit\n"+"3. Withdraw\n"+"4. Transfer\n"+"5. Lock Account\n"+"6. Exit")
         choice = input("Enter your choice (1-6): ")
+
+        clear_screen()
 
         if choice == '1':
             show_balance(balance)
+
         elif choice == '2':
             if account == 1:
                 balance_1 += deposit()
             else:
                 balance_2 += deposit()
+
         elif choice == '3':
             if account == 1:
                 balance_1 -= withdraw(balance_1)
             else:
                 balance_2 -= withdraw(balance_2)
+
         elif choice == '4':
             if account == 1:
-                balance_1 -= transfer(balance_1)
+                t = transfer(balance_1)
+                balance_1 -= t
+                balance_2 += t
             else:
-                balance_2 -= transfer(balance_2)
-        elif choice == '5':
-            lock_account()
-        elif choice == '6':
-            is_running = False
-        else:
-            print("*********************")
-            print("That is not a valid choice")
-            print("*********************")
+                t = transfer(balance_2)
+                balance_2 -= t
+                balance_1 += t
 
-    print("*********************")
-    print("Thank you! Have a nice day!")
-    print("*********************")
+        elif choice == '5':
+            lock_account(balance_1, balance_2)
+
+        elif choice == '6':
+            save_balances(balance_1, balance_2)
+            is_running = False
+
+        else:
+            decorated_message("That is not a valid choice")
+
+    decorated_message("Thank you! Have a nice day!")
 
 if __name__ == '__main__':
     main()
