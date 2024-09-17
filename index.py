@@ -1,4 +1,5 @@
 import os, json
+from datetime import datetime
 
 def clear_screen():
     if os.name == 'nt':
@@ -15,34 +16,41 @@ def decorated_message(message):
     for line in lines:
         print(f"* {line.ljust(max_length)} *")
     print(border + "\n")
-    
-def load_balances(user="justin"):
+
+def load_user_data(user="justin"):
     if os.path.exists("balances.json"):
         with open("balances.json", "r") as f:
             data = json.load(f)
-            user_data = data.get("users", {}).get(user, {}).get("accounts", {})
-            balance_1 = user_data.get("account1", {}).get("balance", 0.0)
-            balance_2 = user_data.get("account2", {}).get("balance", 0.0)
-        return balance_1, balance_2
-    else:
-        return 0.0, 0.0  #default balance of 0 for both accounts
+            user_data = data.get("users", {}).get(user, {})
+            return user_data
+    return {"accounts": {}, "login_attempts": 0, "last_successful_login": None}
 
-def save_balances(balance_1, balance_2, user="justin"):
+def save_user_data(user_data, user="justin"):
     if os.path.exists("balances.json"):
         with open("balances.json", "r") as f:
             data = json.load(f)
     else:
         data = {"users": {}}
     
-    data["users"][user] = {
-        "accounts": {
-            "account1": {"balance": balance_1},
-            "account2": {"balance": balance_2}
-        }
-    }
+    data["users"][user] = user_data
 
     with open("balances.json", "w") as f:
         json.dump(data, f, indent=4)
+
+def load_balances(user="justin"):
+    user_data = load_user_data(user)
+    accounts = user_data.get("accounts", {})
+    balance_1 = accounts.get("account1", {}).get("balance", 0.0)
+    balance_2 = accounts.get("account2", {}).get("balance", 0.0)
+    return balance_1, balance_2
+
+def save_balances(balance_1, balance_2, user="justin"):
+    user_data = load_user_data(user)
+    user_data["accounts"] = {
+        "account1": {"balance": balance_1},
+        "account2": {"balance": balance_2}
+    }
+    save_user_data(user_data, user)
 
 def show_balance(balance):
     decorated_message(f"Your balance is ${balance:.2f}")
@@ -96,10 +104,17 @@ def sign_in():
 
     clear_screen()
 
+    user_data = load_user_data(username)
+
     if username == "justin" and password == "software":
+        user_data["login_attempts"] = 0
+        user_data["last_successful_login"] = datetime.now().isoformat()
+        save_user_data(user_data, username)
         print("Sign-in successful!\n")
         return True
     else:
+        user_data["login_attempts"] = user_data.get("login_attempts", 0) + 1
+        save_user_data(user_data, username)
         print("Invalid username or password.")
         return False
     
@@ -117,6 +132,7 @@ def account_options():
     elif choice == '2':
         return 2
     elif choice == '3':
+        clear_screen()
         print("Have a nice day!")
         exit()
     else:
