@@ -97,6 +97,8 @@ def transfer(balance):
         decorated_message(f"{amount} successfully transferred")
         return amount
     
+failed_login_wait = 60
+
 def sign_in():
     decorated_message(" Welcome to the Banking App!\n" + "     Please Sign In ")
     username = input("Enter your username: ")
@@ -106,18 +108,31 @@ def sign_in():
 
     user_data = load_user_data(username)
 
+    seconds_since_last_attempt = round((datetime.now() - datetime.fromisoformat(user_data.get("last_unsuccessful_login"))).total_seconds(), 0)
+
+    # Check if more than 3 failed attempts have been made
+    if user_data.get("login_attempts") >= 3:
+        # If so, check if enough time has passed since last failed attempt
+        if seconds_since_last_attempt < failed_login_wait:
+            wait_time = failed_login_wait - seconds_since_last_attempt
+            print(f"Last login attempt too recent\nPlease wait {wait_time} more seconds before attempting to login again")
+            return False
+
     if username == "justin" and password == "software":
+        # Successful login
         user_data["login_attempts"] = 0
         user_data["last_successful_login"] = datetime.now().isoformat()
         save_user_data(user_data, username)
         print("Sign-in successful!\n")
         return True
     else:
+        # Increment login attempts and record unsuccessful login
         user_data["login_attempts"] = user_data.get("login_attempts", 0) + 1
+        user_data["last_unsuccessful_login"] = datetime.now().isoformat()
         save_user_data(user_data, username)
         print("Invalid username or password.")
         return False
-    
+
 def lock_account(b1, b2):
     save_balances(b1, b2)
     decorated_message("Account locked")
